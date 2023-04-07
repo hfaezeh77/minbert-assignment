@@ -10,7 +10,7 @@ from utils import *
 class BertSelfAttention(nn.Module):
   def __init__(self, config):
     super().__init__()
-    print('x')
+  
 
     self.num_attention_heads = config.num_attention_heads
     self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
@@ -44,10 +44,23 @@ class BertSelfAttention(nn.Module):
     # Note again: in the attention_mask non-padding tokens with 0 and padding tokens with a large negative number 
 
     # normalize the scores
+    sm = nn.Softmax(dim=3)
+
+    bs, _, seq_len = key.shape[:3]
+    key = key.transpose(2, 3)
+    S = query@key
 
     # multiply the attention scores to the value and get back V' 
+    S /= self.attention_head_size**0.5 #[bs, self.num_attention_heads, seq_len, seq_len)
+    S += attention_mask
+    S = sm(S)
+    S = self.dropout(S)
+    V = S@value #[bs, self.num_attention_heads, seq_len, self.attention_head_size)
+    V = V.transpose(1,2).contiguous()
 
     # next, we need to concat multi-heads and recover the original shape [bs, seq_len, num_attention_heads * attention_head_size = hidden_size]
+    output = V.view(bs,seq_len,self.all_head_size) #[bs, seq_len, self.num_attention_heads*self.attention_head_size=hidden)
+    return output
     raise NotImplementedError
 
   def forward(self, hidden_states, attention_mask):
