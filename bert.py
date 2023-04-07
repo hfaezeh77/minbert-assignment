@@ -10,6 +10,7 @@ from utils import *
 class BertSelfAttention(nn.Module):
   def __init__(self, config):
     super().__init__()
+    print('x')
 
     self.num_attention_heads = config.num_attention_heads
     self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
