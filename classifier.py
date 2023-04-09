@@ -1,6 +1,8 @@
 import time, random, numpy as np, argparse, sys, re, os
 from types import SimpleNamespace
 
+import math
+
 import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
@@ -38,11 +40,17 @@ class BertSentClassifier(torch.nn.Module):
                 param.requires_grad = True
 
         # todo
-        raise NotImplementedError
+        self.dropout = torch.nn.Dropout(config.hidden_dropout_prob)
+        self.classifier = torch.nn.Linear(config.hidden_size, config.num_labels)
+        # raise NotImplementedError
 
     def forward(self, input_ids, attention_mask):
         # todo
         # the final bert contextualize embedding is the hidden state of [CLS] token (the first token)
+        pooled_output=self.bert(input_ids= input_ids, attention_mask= attention_mask)['pooler_output']
+        pooled_output=self.dropout(pooled_output)
+        logits=self.classifier(pooled_output)
+        return F.log_softmax(logits, dim=1)
         raise NotImplementedError
 
 # create a custom Dataset Class to be used for the dataloader
